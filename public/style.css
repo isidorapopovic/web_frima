@@ -116,3 +116,28 @@ button {
         padding: 12px;
         font-size: 16px;
     }
+
+.product-page {
+    display: flex;
+    gap: 50px;
+    margin-top: 40px;
+    align-items: flex-start;
+}
+
+.product-image img {
+    width: 450px;
+    border-radius: 10px;
+}
+
+.product-info {
+    flex: 1;
+}
+
+    .product-info h1 {
+        margin-top: 0;
+    }
+
+    .product-info button {
+        padding: 12px 25px;
+        font-size: 18px;
+    }

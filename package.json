@@ -8,5 +8,8 @@
     "ejs": "^3.1.10",
     "express": "^4.19.2",
     "express-session": "^1.18.1"
+  },
+  "devDependencies": {
+    "eslint": "^10.7.0"
   }
 }
