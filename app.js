@@ -17,74 +17,210 @@ app.use(
     })
 );
 
-// initialise basket
+// Initialise basket
 app.use((req, res, next) => {
+
     if (!req.session.basket) {
         req.session.basket = [];
     }
+
     next();
+
 });
 
-// Homepage
+// ==========================
+// HOME
+// ==========================
+
 app.get("/", (req, res) => {
+
+    const basketSize = req.session.basket.reduce(
+        (sum, item) => sum + item.quantity,
+        0
+    );
+
     res.render("index", {
         products,
-        basketSize: req.session.basket.length
+        basketSize
     });
+
 });
 
-// Product page
+// ==========================
+// PRODUCT PAGE
+// ==========================
+
 app.get("/product/:id", (req, res) => {
 
-    const product = products.find(p => p.id == req.params.id);
+    const product = products.find(
+        p => p.id == req.params.id
+    );
 
-    if (!product)
+    if (!product) {
         return res.send("Product not found");
+    }
+
+    const basketSize = req.session.basket.reduce(
+        (sum, item) => sum + item.quantity,
+        0
+    );
 
     res.render("product", {
         product,
-        basketSize: req.session.basket.length
+        basketSize
     });
 
 });
 
-// Add to basket
+// ==========================
+// ADD TO BASKET
+// ==========================
+
 app.post("/basket/add/:id", (req, res) => {
 
-    const product = products.find(p => p.id == req.params.id);
+    const product = products.find(
+        p => p.id == req.params.id
+    );
 
-    req.session.basket.push(product);
+    if (!product) {
+        return res.redirect("/");
+    }
+
+    const existingItem = req.session.basket.find(
+        item => item.product.id === product.id
+    );
+
+    if (existingItem) {
+
+        existingItem.quantity++;
+
+    } else {
+
+        req.session.basket.push({
+
+            product,
+            quantity: 1
+
+        });
+
+    }
 
     res.redirect("/basket");
 
 });
 
-// Basket
+// ==========================
+// INCREASE QUANTITY
+// ==========================
+
+app.post("/basket/increase/:id", (req, res) => {
+
+    const item = req.session.basket.find(
+        item => item.product.id == req.params.id
+    );
+
+    if (item) {
+        item.quantity++;
+    }
+
+    res.redirect("/basket");
+
+});
+
+// ==========================
+// DECREASE QUANTITY
+// ==========================
+
+app.post("/basket/decrease/:id", (req, res) => {
+
+    const item = req.session.basket.find(
+        item => item.product.id == req.params.id
+    );
+
+    if (!item) {
+        return res.redirect("/basket");
+    }
+
+    item.quantity--;
+
+    if (item.quantity <= 0) {
+
+        req.session.basket = req.session.basket.filter(
+            basketItem => basketItem.product.id != req.params.id
+        );
+
+    }
+
+    res.redirect("/basket");
+
+});
+
+// ==========================
+// REMOVE ITEM
+// ==========================
+
+app.post("/basket/remove/:id", (req, res) => {
+
+    req.session.basket = req.session.basket.filter(
+        item => item.product.id != req.params.id
+    );
+
+    res.redirect("/basket");
+
+});
+
+// ==========================
+// VIEW BASKET
+// ==========================
+
 app.get("/basket", (req, res) => {
 
-    let total = 0;
+    let subtotal = 0;
 
     req.session.basket.forEach(item => {
-        total += item.price;
+
+        subtotal += item.product.price * item.quantity;
+
     });
+
+    const shipping = subtotal > 200 ? 0 : 10;
+
+    const vat = subtotal * 0.20;
+
+    const total = subtotal + shipping + vat;
+
+    const basketSize = req.session.basket.reduce(
+        (sum, item) => sum + item.quantity,
+        0
+    );
 
     res.render("basket", {
+
         basket: req.session.basket,
+
+        subtotal,
+
+        shipping,
+
+        vat,
+
         total,
-        basketSize: req.session.basket.length
+
+        basketSize
+
     });
 
 });
 
-// Remove item
-app.post("/basket/remove/:index", (req, res) => {
-
-    req.session.basket.splice(req.params.index, 1);
-
-    res.redirect("/basket");
-
-});
+// ==========================
+// START SERVER
+// ==========================
 
 app.listen(3000, () => {
-    console.log("Server running on http://localhost:3000");
+
+    console.log("====================================");
+    console.log(" Webshop running");
+    console.log(" http://localhost:3000");
+    console.log("====================================");
+
 });
